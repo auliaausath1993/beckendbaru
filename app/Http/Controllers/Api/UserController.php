@@ -8,9 +8,16 @@ use App\Models\Content;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Http\Repositories\MembershipRepository;
+use App\Http\Repositories\PaymentRepository;
+use Carbon\Carbon;
 
 class UserController extends ApiController
 {
+    public function __construct(MembershipRepository $memRepo, PaymentRepository $payRepo) {
+        $this->memRepo = $memRepo;
+        $this->payRepo = $payRepo;
+    }
     public function index() {
         $user = Auth::guard('api')->user();
         $data = Customer::find($user->customer_id);
@@ -110,6 +117,14 @@ class UserController extends ApiController
     public function patnerProfile() {
         $user = Auth::guard('apipartner')->user();
         $data = Partners::find($user->partner_id);
+        $checkInvoice = $this->payRepo->checkStatusInvoice($data);
+        $isMembership = $this->memRepo->isMembership($data->partner_id);
+        $data['membership'] = false;
+        if ($isMembership){
+            $data['membership'] = true;
+            $data['membership_nama'] = $isMembership->membership_nama;
+            $data['membership_end'] = Carbon::now()->diffInDays($isMembership->membership_end, false);
+        }
         if(!$data){
             return $this->setStatusCode(401)->makeResponse(null, 'Failed To Retrieve Data', [], 'error');
         }

@@ -44,6 +44,10 @@ Route::group(['middleware' => ['jwt.verify'], 'namespace' => 'Api'], function() 
     Route::post('order_verifikasi', 'OrderController@order_verifikasi');  
     Route::post('history_orders', 'OrderController@HistoryOrder');  
     Route::post('update-order', 'OrderController@updateOrder');  
+    Route::get('dataMembership', 'OrderController@dataMembership');  
+    Route::post('paket_detail', 'OrderController@detailPaket');  
+    Route::post('bayar', 'Payment\PaymentController@make_invoice');
+    Route::get('data_pembayaran', 'Payment\PaymentController@data_invoice');
     
 });
 

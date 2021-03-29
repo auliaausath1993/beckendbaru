@@ -4,13 +4,21 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
+use App\Models\Partners;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
-
+use App\Http\Repositories\MembershipRepository;
 class OrderController extends ApiController
 {
+    protected $memRepo;
+
+    public function __construct(MembershipRepository $memRepo)
+    {
+        $this->memRepo = $memRepo;
+    }
+
 	public function orders(Request $request)
 	{
 		$model = new Order();
@@ -365,6 +373,40 @@ class OrderController extends ApiController
             return response()->json([
                 'status_code' => 200,
                 'data'=> $update,
+                'status' => 'success',
+                'message' => 'Successfully'
+            ], 200);
+    }
+    function dataMembership()
+    {
+        $user = Auth::guard('apipartner')->user();
+        $data = Partners::find($user->partner_id);
+        $isMembership = $this->memRepo->haveInvoiceUnpaid($data->partner_id);
+        if($isMembership){
+            return response()->json([
+                'status_code' => 422,
+                'status' => 'error',
+                'message' => 'Unknown Error',
+                'data' => ''
+            ], 422);
+        }
+
+        $result = $this->memRepo->allMembership();
+
+            return response()->json([
+                'status_code' => 200,
+                'data'=> $result,
+                'status' => 'success',
+                'message' => 'Successfully'
+            ], 200);
+    }
+    function detailPaket(Request $request)
+    {
+        $result = $this->memRepo->membershipDetail($request);
+
+            return response()->json([
+                'status_code' => 200,
+                'data'=> $result,
                 'status' => 'success',
                 'message' => 'Successfully'
             ], 200);

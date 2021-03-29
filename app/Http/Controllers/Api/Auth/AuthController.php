@@ -139,9 +139,10 @@ class AuthController extends ApiController
             // $otpService = new Otp();
             // $otp = $otpService->generateOtp();
             // $otpService->sendOtp($request->phone, $otp['otp']);
-            $data = new patner();
+            $initUUID = Uuid::uuid4();
 
-            $data->customer_id = Uuid::uuid4();
+            $data = new Partners();
+            $data->partner_id = $initUUID;
             $data->name = $request->name;
             $data->phone = $request->phone;
             $data->email = $request->email;
@@ -150,6 +151,20 @@ class AuthController extends ApiController
             $data->otp_expired = $expiredTime;
             $data->status = 'active';
             $data->save();
+
+            $data = [
+                'users_id' =>  $initUUID,
+                'users_email' => $request->email,
+                'membership_code' => 'FREE_MEMBERSHIP',
+                'membership_nama' => 'MEMBERSHIP FREE',
+                'membership_user_exp' => 60,
+                'membership_user_status' => 1,
+                'payment_method' => 'FREE_MEMBERSHIP',
+                'membership_end' => Carbon::now()->addMonths(2)
+            ];
+
+            DB::table('membership_user')->insert($data);
+
         }catch (Exception $e) {
             DB::rollBack();
             return response()->json([
